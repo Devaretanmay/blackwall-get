@@ -4,7 +4,7 @@
 
 $ErrorActionPreference = 'Stop'
 
-$Repo = "creepymarshmallow117/blackwall"
+$Repo = "Devaretanmay/blackwall-get"
 $BinaryName = "blackwall.exe"
 $InstallDir = "$env:ProgramFiles\Blackwall"
 $ExePath = Join-Path $InstallDir $BinaryName

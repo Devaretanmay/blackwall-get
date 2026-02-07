@@ -4,7 +4,7 @@ set -euo pipefail
 # Blackwall one-line installer
 # Usage: curl -fsSL https://get.blackwall.io | bash
 
-REPO="creepymarshmallow117/blackwall"
+REPO="Devaretanmay/blackwall-get"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="blackwall"
 
