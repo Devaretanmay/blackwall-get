@@ -6,7 +6,7 @@ set -euo pipefail
 
 REPO="Devaretanmay/blackwall-get"
 INSTALL_DIR="/usr/local/bin"
-BINARY_NAME="blackwall"
+BINARY_NAME="bw"
 
 err() { echo "[blackwall] $*" >&2; }
 info() { echo "[blackwall] $*"; }
