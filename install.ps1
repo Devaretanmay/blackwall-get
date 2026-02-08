@@ -26,6 +26,23 @@ Invoke-WebRequest -Uri $Url -OutFile $ExePath
 
 Write-Host "[blackwall] Installed to $ExePath"
 
+# Configure trust env file
+$EnvDir = Join-Path $env:ProgramData "Blackwall"
+$EnvFile = Join-Path $EnvDir "blackwall.env"
+$LicensePathDefault = Join-Path $EnvDir "license.json"
+$IssuerKeysDefault = "/duYovG0PEc69OHjqk7D8k2oCdcEkY/gaX2LSi8pCKs="
+$LicensePath = if ($env:TRUST_LICENSE_PATH) { $env:TRUST_LICENSE_PATH } else { $LicensePathDefault }
+$IssuerKeys = if ($env:TRUST_ISSUER_KEYS) { $env:TRUST_ISSUER_KEYS } else { $IssuerKeysDefault }
+
+if (-not (Test-Path $EnvFile)) {
+  Write-Host "[blackwall] Writing trust config to $EnvFile"
+  New-Item -ItemType Directory -Force -Path $EnvDir | Out-Null
+  @(
+    "TRUST_LICENSE_PATH=$LicensePath",
+    "TRUST_ISSUER_KEYS=$IssuerKeys"
+  ) | Set-Content -Path $EnvFile -Encoding ASCII
+}
+
 # Run init
 Write-Host "[blackwall] Running: blackwall init"
 & $ExePath init
