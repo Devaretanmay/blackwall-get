@@ -34,13 +34,26 @@ $IssuerKeysDefault = "/duYovG0PEc69OHjqk7D8k2oCdcEkY/gaX2LSi8pCKs="
 $LicensePath = if ($env:TRUST_LICENSE_PATH) { $env:TRUST_LICENSE_PATH } else { $LicensePathDefault }
 $IssuerKeys = if ($env:TRUST_ISSUER_KEYS) { $env:TRUST_ISSUER_KEYS } else { $IssuerKeysDefault }
 
+function New-JwtSecret {
+  $bytes = New-Object byte[] 48
+  [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($bytes)
+  [Convert]::ToBase64String($bytes)
+}
+
 if (-not (Test-Path $EnvFile)) {
   Write-Host "[blackwall] Writing trust config to $EnvFile"
   New-Item -ItemType Directory -Force -Path $EnvDir | Out-Null
   @(
     "TRUST_LICENSE_PATH=$LicensePath",
-    "TRUST_ISSUER_KEYS=$IssuerKeys"
+    "TRUST_ISSUER_KEYS=$IssuerKeys",
+    "JWT_SECRET=$(New-JwtSecret)"
   ) | Set-Content -Path $EnvFile -Encoding ASCII
+} else {
+  $content = Get-Content -Path $EnvFile -ErrorAction SilentlyContinue
+  if ($content -notmatch '^JWT_SECRET=') {
+    Write-Host "[blackwall] Adding JWT_SECRET to $EnvFile"
+    "JWT_SECRET=$(New-JwtSecret)" | Add-Content -Path $EnvFile -Encoding ASCII
+  }
 }
 
 # Run init
