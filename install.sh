@@ -81,6 +81,13 @@ write_env_file() {
     echo "TRUST_LICENSE_PATH=$LICENSE_PATH"
     echo "TRUST_ISSUER_KEYS=$ISSUER_KEYS"
     echo "JWT_SECRET=$(generate_jwt)"
+    echo "ENCRYPTION_KEY=$(generate_jwt)"
+    echo "ENCRYPTION_SALT=$(python - <<'PY'
+import os
+print(os.urandom(16).hex())
+PY
+)"
+    echo "DB_REQUIRED=false"
   } > "$tmp"
 
   if [[ -w "$ENV_DIR" ]]; then
@@ -104,12 +111,50 @@ else
       printf '\nJWT_SECRET=%s\n' "$(generate_jwt)" | sudo tee -a "$ENV_FILE" >/dev/null
     fi
   fi
+  if ! grep -q '^ENCRYPTION_KEY=' "$ENV_FILE" 2>/dev/null; then
+    info "Adding ENCRYPTION_KEY to $ENV_FILE"
+    if [[ -w "$ENV_DIR" ]]; then
+      printf '\nENCRYPTION_KEY=%s\n' "$(generate_jwt)" >> "$ENV_FILE"
+    else
+      printf '\nENCRYPTION_KEY=%s\n' "$(generate_jwt)" | sudo tee -a "$ENV_FILE" >/dev/null
+    fi
+  fi
+  if ! grep -q '^ENCRYPTION_SALT=' "$ENV_FILE" 2>/dev/null; then
+    info "Adding ENCRYPTION_SALT to $ENV_FILE"
+    if [[ -w "$ENV_DIR" ]]; then
+      printf '\nENCRYPTION_SALT=%s\n' "$(python - <<'PY'
+import os
+print(os.urandom(16).hex())
+PY
+)" >> "$ENV_FILE"
+    else
+      printf '\nENCRYPTION_SALT=%s\n' "$(python - <<'PY'
+import os
+print(os.urandom(16).hex())
+PY
+)" | sudo tee -a "$ENV_FILE" >/dev/null
+    fi
+  fi
+  if ! grep -q '^DB_REQUIRED=' "$ENV_FILE" 2>/dev/null; then
+    info "Adding DB_REQUIRED=false to $ENV_FILE"
+    if [[ -w "$ENV_DIR" ]]; then
+      printf '\nDB_REQUIRED=false\n' >> "$ENV_FILE"
+    else
+      printf '\nDB_REQUIRED=false\n' | sudo tee -a "$ENV_FILE" >/dev/null
+    fi
+  fi
 fi
 
 # Initialize
 if command -v blackwall >/dev/null 2>&1; then
   info "Running: blackwall init"
   blackwall init || true
+fi
+
+if [[ -w "$ENV_DIR" ]]; then
+  chmod 0644 "$ENV_FILE" || true
+else
+  sudo chmod 0644 "$ENV_FILE" || true
 fi
 
 info "Done. Run 'blackwall --help' to get started."

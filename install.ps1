@@ -46,13 +46,28 @@ if (-not (Test-Path $EnvFile)) {
   @(
     "TRUST_LICENSE_PATH=$LicensePath",
     "TRUST_ISSUER_KEYS=$IssuerKeys",
-    "JWT_SECRET=$(New-JwtSecret)"
+    "JWT_SECRET=$(New-JwtSecret)",
+    "ENCRYPTION_KEY=$(New-JwtSecret)",
+    "ENCRYPTION_SALT=$([Guid]::NewGuid().ToString('N'))",
+    "DB_REQUIRED=false"
   ) | Set-Content -Path $EnvFile -Encoding ASCII
 } else {
   $content = Get-Content -Path $EnvFile -ErrorAction SilentlyContinue
   if ($content -notmatch '^JWT_SECRET=') {
     Write-Host "[blackwall] Adding JWT_SECRET to $EnvFile"
     "JWT_SECRET=$(New-JwtSecret)" | Add-Content -Path $EnvFile -Encoding ASCII
+  }
+  if ($content -notmatch '^ENCRYPTION_KEY=') {
+    Write-Host "[blackwall] Adding ENCRYPTION_KEY to $EnvFile"
+    "ENCRYPTION_KEY=$(New-JwtSecret)" | Add-Content -Path $EnvFile -Encoding ASCII
+  }
+  if ($content -notmatch '^ENCRYPTION_SALT=') {
+    Write-Host "[blackwall] Adding ENCRYPTION_SALT to $EnvFile"
+    "ENCRYPTION_SALT=$([Guid]::NewGuid().ToString('N'))" | Add-Content -Path $EnvFile -Encoding ASCII
+  }
+  if ($content -notmatch '^DB_REQUIRED=') {
+    Write-Host "[blackwall] Adding DB_REQUIRED=false to $EnvFile"
+    "DB_REQUIRED=false" | Add-Content -Path $EnvFile -Encoding ASCII
   }
 }
 
