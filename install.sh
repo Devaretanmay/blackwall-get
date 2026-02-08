@@ -7,6 +7,7 @@ set -euo pipefail
 REPO="Devaretanmay/blackwall-get"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="bw"
+ASSET_PREFIX="blackwall"
 
 err() { echo "[blackwall] $*" >&2; }
 info() { echo "[blackwall] $*"; }
@@ -33,7 +34,7 @@ if [[ -z "${TAG:-}" ]]; then
   err "Could not determine latest release tag."; exit 1
 fi
 
-ASSET="${BINARY_NAME}-${OS}-${ARCH}"
+ASSET="${ASSET_PREFIX}-${OS}-${ARCH}"
 URL="https://github.com/$REPO/releases/download/$TAG/$ASSET"
 
 TMP_DIR=$(mktemp -d)
