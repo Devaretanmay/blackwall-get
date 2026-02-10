@@ -131,7 +131,20 @@ EOF
 fi
 
 # Symlinks
-ln -sf "$INSTALL_DIR/bw" /usr/local/bin/bw 2>/dev/null || true
+echo "Creating symlinks..."
+# Link the main CLI binary (named 'blackwall') to 'bw'
+if [ -f "$INSTALL_DIR/blackwall" ]; then
+    ln -sf "$INSTALL_DIR/blackwall" /usr/local/bin/bw
+    chmod +x /usr/local/bin/bw
+    echo "Linked 'bw' -> '$INSTALL_DIR/blackwall'"
+elif [ -f "$INSTALL_DIR/bw" ]; then
+    ln -sf "$INSTALL_DIR/bw" /usr/local/bin/bw
+    chmod +x /usr/local/bin/bw
+    echo "Linked 'bw' -> '$INSTALL_DIR/bw'"
+else
+    echo -e "${RED}Warning: CLI binary not found. 'bw' command may not work.${NC}"
+fi
+
 ln -sf "$INSTALL_DIR/blackwall-license" /usr/local/bin/bw-license 2>/dev/null || true
 
 # Summary Box
