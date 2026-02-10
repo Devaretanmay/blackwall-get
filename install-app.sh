@@ -46,7 +46,8 @@ trap cleanup EXIT
 
 # Fetch Binaries
 echo "Fetching latest binaries..."
-LATEST_REL=$(curl -s "https://api.github.com/repos/$REPO/releases/latest")
+# Use the specific tag v2.1.0-claw-test
+LATEST_REL=$(curl -s "https://api.github.com/repos/$REPO/releases/tags/v2.1.0-claw-test")
 ASSET_URL=$(echo "$LATEST_REL" | grep "browser_download_url" | grep "blackwall-trial-binary" | cut -d '"' -f 4 | head -n 1)
 
 if [ -z "$ASSET_URL" ]; then echo -e "${RED}Error: Release not found.${NC}"; exit 1; fi
