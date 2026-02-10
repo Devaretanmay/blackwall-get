@@ -2,7 +2,7 @@
 # Usage: .\install-app.ps1 (Run as Administrator)
 
 $ErrorActionPreference = "Stop"
-
+$Repo = "creepymarshmallow117/blackwall"
 $InstallDir = "C:\Program Files\Blackwall"
 $DataDir = "$env:APPDATA\Blackwall"
 $ConfigDir = "$env:PROGRAMDATA\Blackwall"
@@ -18,6 +18,37 @@ if (-not $isAdmin) {
     exit 1
 }
 
+# Download Function
+function Get-Binaries {
+    if (Test-Path ".\blackwall-platform.exe") { return }
+    
+    Write-Host "Fetching latest release..."
+    try {
+        $Latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest"
+        $AssetUrl = $Latest.assets | Where-Object { $_.name -like "*windows*.zip" } | Select-Object -ExpandProperty browser_download_url -First 1
+    } catch {
+        Write-Error "Failed to fetch release info: $_"
+        exit 1
+    }
+    
+    if (-not $AssetUrl) { Write-Error "Could not find Windows release asset."; exit 1 }
+    
+    Write-Host "Downloading $AssetUrl..."
+    Invoke-WebRequest -Uri $AssetUrl -OutFile "blackwall.zip"
+    
+    Write-Host "Extracting..."
+    Expand-Archive -Path "blackwall.zip" -DestinationPath "." -Force
+    
+    # Flatten
+    $SubDir = Get-ChildItem -Directory | Where-Object { $_.Name -like "blackwall-windows*" } | Select-Object -First 1
+    if ($SubDir) {
+        Get-ChildItem $SubDir.FullName | Move-Item -Destination "." -Force
+        Remove-Item $SubDir.FullName -Recurse -Force
+    }
+    Remove-Item "blackwall.zip" -Force
+}
+
+
 # 1. Check License
 if (-not (Test-Path $LicensePath)) {
     Write-Host "❌ Error: License not found at $LicensePath" -ForegroundColor Red
@@ -26,6 +57,7 @@ if (-not (Test-Path $LicensePath)) {
 }
 
 # 2. Install Binaries
+Get-Binaries
 Write-Host "Installing binaries..."
 New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
 New-Item -ItemType Directory -Path $ConfigDir -Force | Out-Null
@@ -34,8 +66,6 @@ $Binaries = @("blackwall.exe", "blackwall-platform.exe", "blackwall-license.exe"
 foreach ($bin in $Binaries) {
     if (Test-Path ".\$bin") {
         Copy-Item ".\$bin" $InstallDir -Force
-    } else {
-        Write-Host "⚠️ Warning: $bin not found in source." -ForegroundColor Yellow
     }
 }
 
@@ -63,7 +93,6 @@ Write-Host "Creating Windows Service..."
 sc.exe create $ServiceName binPath= "`"$ServiceBin`"" start= auto | Out-Null
 sc.exe description $ServiceName "Blackwall AI Risk Platform" | Out-Null
 
-# Set Environment (via Registry for Service)
 $RegPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$ServiceName"
 Set-ItemProperty -Path $RegPath -Name "Environment" -Value $EnvContent -Type MultiString
 
