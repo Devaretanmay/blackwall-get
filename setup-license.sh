@@ -19,47 +19,50 @@ echo "=========================="
 
 if [ "$EUID" -ne 0 ]; then
     echo -e "${RED}Error: Must run as root (sudo)${NC}"
-    echo "Try: sudo ./setup-license.sh"
     exit 1
 fi
 
+# Create a temp dir for extraction to avoid conflicts
+WORK_DIR=$(mktemp -d)
+cleanup() {
+    rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT
+
 # Function to fetch latest release
 fetch_binaries() {
-    if [ -f "./blackwall-license" ]; then
-        return 0
-    fi
-
-    echo "Binaries not found. Fetching latest release..."
+    echo "Fetching latest release..."
     
     # Get latest release data
     LATEST_REL=$(curl -s "https://api.github.com/repos/$REPO/releases/latest")
     
-    # Find asset URL (looking for blackwall-trial-binary-*.tar.gz)
+    # Find asset URL
     ASSET_URL=$(echo "$LATEST_REL" | grep "browser_download_url" | grep "blackwall-trial-binary" | cut -d '"' -f 4 | head -n 1)
     
     if [ -z "$ASSET_URL" ]; then
         echo -e "${RED}Error: Could not find release asset.${NC}"
-        echo "Check if a release exists at https://github.com/$REPO/releases"
         exit 1
     fi
 
-    echo "Downloading: $ASSET_URL"
-    curl -L -o blackwall.tar.gz "$ASSET_URL"
+    echo "Downloading to temp: $ASSET_URL"
+    curl -L -o "$WORK_DIR/blackwall.tar.gz" "$ASSET_URL"
     
     echo "Extracting..."
-    tar -xzf blackwall.tar.gz --strip-components=1
-    rm blackwall.tar.gz
-    
-    echo -e "${GREEN}Binaries downloaded.${NC}"
+    tar -xzf "$WORK_DIR/blackwall.tar.gz" -C "$WORK_DIR" --strip-components=1
 }
 
-# Ensure binaries are present
+# Fetch binaries into temp dir
 fetch_binaries
 
 # License Logic
-LICENSE_TOOL="./blackwall-license"
+LICENSE_TOOL="$WORK_DIR/blackwall-license"
 mkdir -p "$DATA_DIR"
 LICENSE_PATH="$DATA_DIR/license.json"
+
+if [ ! -f "$LICENSE_TOOL" ]; then
+    echo -e "${RED}Error: Extracted binary $LICENSE_TOOL not found.${NC}"
+    exit 1
+fi
 
 if [ -f "$LICENSE_PATH" ]; then
     echo "Found existing license at $LICENSE_PATH"

@@ -26,18 +26,23 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Create a temp dir for extraction
+WORK_DIR=$(mktemp -d)
+cleanup() {
+    rm -rf "$WORK_DIR"
+}
+trap cleanup EXIT
+
 # Function to fetch latest release
 fetch_binaries() {
-    if [ -f "./blackwall-platform" ]; then
-        return 0
-    fi
-    echo "Binaries not found. Fetching latest release..."
+    echo "Fetching latest release..."
     LATEST_REL=$(curl -s "https://api.github.com/repos/$REPO/releases/latest")
     ASSET_URL=$(echo "$LATEST_REL" | grep "browser_download_url" | grep "blackwall-trial-binary" | cut -d '"' -f 4 | head -n 1)
     if [ -z "$ASSET_URL" ]; then echo -e "${RED}Error: Could not find release asset.${NC}"; exit 1; fi
-    curl -L -o blackwall.tar.gz "$ASSET_URL"
-    tar -xzf blackwall.tar.gz --strip-components=1
-    rm blackwall.tar.gz
+    
+    echo "Downloading to temp..."
+    curl -L -o "$WORK_DIR/blackwall.tar.gz" "$ASSET_URL"
+    tar -xzf "$WORK_DIR/blackwall.tar.gz" -C "$WORK_DIR" --strip-components=1
 }
 
 # 1. Check License
@@ -55,8 +60,8 @@ mkdir -p "$INSTALL_DIR" "$LOG_DIR" "$CONFIG_DIR"
 
 BINARIES=("blackwall" "blackwall-platform" "blackwall-license" "bw")
 for bin in "${BINARIES[@]}"; do
-    if [ -f "./$bin" ]; then
-        cp "./$bin" "$INSTALL_DIR/"
+    if [ -f "$WORK_DIR/$bin" ]; then
+        cp "$WORK_DIR/$bin" "$INSTALL_DIR/"
         chmod +x "$INSTALL_DIR/$bin"
     fi
 done
