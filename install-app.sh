@@ -58,7 +58,7 @@ echo "Installing to $INSTALL_DIR..."
 mkdir -p "$INSTALL_DIR" "$LOG_DIR" "$CONFIG_DIR"
 
 # Install Files
-BINARIES=("blackwall" "blackwall-platform" "blackwall-license" "bw")
+BINARIES=("blackwall" "blackwall-platform" "blackwall-license" "bw-cli")
 for bin in "${BINARIES[@]}"; do
     if [ -f "$WORK_DIR/$bin" ]; then
         cp "$WORK_DIR/$bin" "$INSTALL_DIR/"
@@ -132,8 +132,12 @@ fi
 
 # Symlinks
 echo "Creating symlinks..."
-# Link the main CLI binary (named 'blackwall') to 'bw'
-if [ -f "$INSTALL_DIR/blackwall" ]; then
+# Link the main CLI binary (named 'blackwall' or 'bw-cli') to 'bw'
+if [ -f "$INSTALL_DIR/bw-cli" ]; then
+    ln -sf "$INSTALL_DIR/bw-cli" /usr/local/bin/bw
+    chmod +x /usr/local/bin/bw
+    echo "Linked 'bw' -> '$INSTALL_DIR/bw-cli'"
+elif [ -f "$INSTALL_DIR/blackwall" ]; then
     ln -sf "$INSTALL_DIR/blackwall" /usr/local/bin/bw
     chmod +x /usr/local/bin/bw
     echo "Linked 'bw' -> '$INSTALL_DIR/blackwall'"
