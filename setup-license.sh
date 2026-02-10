@@ -6,7 +6,7 @@ set -e
 
 # Configuration
 DATA_DIR="/var/lib/blackwall"
-REPO="creepymarshmallow117/blackwall"
+REPO="Devaretanmay/blackwall-get"
 
 # Colors
 GREEN='\033[0;32m'

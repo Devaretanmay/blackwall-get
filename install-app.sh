@@ -10,7 +10,7 @@ DATA_DIR="/var/lib/blackwall"
 LOG_DIR="/var/log/blackwall"
 CONFIG_DIR="/etc/blackwall"
 LICENSE_PATH="$DATA_DIR/license.json"
-REPO="creepymarshmallow117/blackwall"
+REPO="Devaretanmay/blackwall-get"
 
 # Colors
 GREEN='\033[0;32m'

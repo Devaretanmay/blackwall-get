@@ -2,7 +2,7 @@
 # Usage: .\setup-license.ps1
 
 $ErrorActionPreference = "Stop"
-$Repo = "creepymarshmallow117/blackwall"
+$Repo = "Devaretanmay/blackwall-get"
 $DataDir = "$env:APPDATA\Blackwall"
 $LicenseTool = ".\blackwall-license.exe"
 

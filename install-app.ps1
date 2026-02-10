@@ -2,7 +2,7 @@
 # Usage: .\install-app.ps1 (Run as Administrator)
 
 $ErrorActionPreference = "Stop"
-$Repo = "creepymarshmallow117/blackwall"
+$Repo = "Devaretanmay/blackwall-get"
 $InstallDir = "C:\Program Files\Blackwall"
 $DataDir = "$env:APPDATA\Blackwall"
 $ConfigDir = "$env:PROGRAMDATA\Blackwall"
